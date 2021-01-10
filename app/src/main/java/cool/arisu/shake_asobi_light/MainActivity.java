@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity implements ShakeGestureManag
 
 	private ShakeGestureManager gestureManager = null;
 	private WebView webView = null;
+	private boolean isImmersiveMode = false;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -34,16 +35,6 @@ public class MainActivity extends AppCompatActivity implements ShakeGestureManag
 		setSupportActionBar(toolbar);
 		webView = findViewById(R.id.webview);
 		webView.loadUrl("file:///android_asset/index.html");
-
-		FloatingActionButton fab = findViewById(R.id.fab);
-		fab.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				// QRコードのスキャンを実行
-				Toast.makeText(MainActivity.this, "「スマホでアソビライト連携」のQRコードを撮影してください", Toast.LENGTH_LONG).show();
-				new IntentIntegrator(MainActivity.this).initiateScan();
-			}
-		});
 	}
 
 	protected void onResume() {
@@ -87,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements ShakeGestureManag
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		//getMenuInflater().inflate(R.menu.menu_main, menu);
+		getMenuInflater().inflate(R.menu.menu_main, menu);
 		return true;
 	}
 
@@ -98,8 +89,14 @@ public class MainActivity extends AppCompatActivity implements ShakeGestureManag
 		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
 
-		//noinspection SimplifiableIfStatement
-		if (id == R.id.action_settings) {
+		if (id == R.id.action_switch_immersive_mode) {
+			// 全画面表示 (没入モード) を切り替え
+			switchImmersiveMode();
+			return true;
+		} else if (id == R.id.action_scan_qr_code) {
+			// QRコードのスキャンを実行
+			Toast.makeText(MainActivity.this, "「スマホでアソビライト連携」のQRコードを撮影してください", Toast.LENGTH_LONG).show();
+			new IntentIntegrator(MainActivity.this).initiateScan();
 			return true;
 		}
 
@@ -119,6 +116,29 @@ public class MainActivity extends AppCompatActivity implements ShakeGestureManag
 		if (webView == null) return;
 
 		webView.loadUrl("javascript:document.querySelector(\"[alt='タップ']\").click();");
+	}
+
+	public void switchImmersiveMode() {
+
+		if (isImmersiveMode) {
+			// 元に戻す
+			getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+			isImmersiveMode = false;
+			Toast.makeText(this, "全画面表示を解除しました", Toast.LENGTH_SHORT).show();
+			return;
+		}
+
+		// 没入モードへ
+		getWindow().getDecorView().setSystemUiVisibility(
+			// 通知バーを非表示
+			View.SYSTEM_UI_FLAG_FULLSCREEN |
+			// ナビゲーションバーを非表示
+			View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY |
+			View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+		);
+		Toast.makeText(this, "全画面表示へ切り替えました", Toast.LENGTH_SHORT).show();
+		isImmersiveMode = true;
+
 	}
 
 	@Override
